@@ -294,7 +294,7 @@ model (else `MODEL_UNAVAILABLE`, topic `agent`); `request` for HTTP calls;
 `platform` (`web`, `ios`, `android`, or an engine's label); `services`, the
 values the config's services yield (topic `setup`); `browser` from
 `@e2e-dev/web`, `device` from `@e2e-dev/mobile`, `desktop` from
-`@e2e-dev/desktop`; `session` only in `test.setup`. `app` opens the app
+`@e2e-dev/desktop`, `electron` from `@e2e-dev/electron`; `session` only in `test.setup`. `app` opens the app
 (`open(path?)`, `back()`, `restart()`, `clearState()`), takes screenshots,
 and records video. Full reference: docs/fixtures.mdx, docs/reference/app.mdx,
 docs/reference/request.mdx.
