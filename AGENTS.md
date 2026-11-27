@@ -146,16 +146,18 @@ suites that consume the built packages the way a user would.
   by the operation's budget and translates it. Unit tests drive
   `DesktopSurface` with a scripted driver (`tests/helpers/fake-driver.ts`)
   and run on any OS. The app it launches gets only a few variables of the
-  run's environment (`INHERITED_ENV` in `src/surface.ts`): the driver
+  run's environment (`INHERITED_ENV` in `src/launch-ownership.ts`): the driver
   launches through `open -n` with exactly that environment, since
   LaunchServices hands the app the environment of the process that asks.
   `pnpm --filter @e2e-dev/desktop build:native` (needs `rustup`) builds
   `native/desktop.<platform>-<arch>.node`, which the loader takes in a
   checkout; a release ships it in `packages/desktop-darwin-arm64` and
   `packages/desktop-darwin-x64`, optional dependencies with `os`/`cpu` set,
-  in a changesets `fixed` group with the engine. After a change under
+  in a changesets `fixed` group with the engine, each with a
+  `THIRD_PARTY_LICENSES.md` of the crates the addon links. After a change under
   `native/`, run `cargo clippy` and `cargo fmt --check` there, rebuild, and
-  run the desktop testbed. A prototype that runs on macOS only: `prepare`
+  run the desktop testbed; after a dependency change, also
+  `pnpm --filter @e2e-dev/desktop licenses:native`, which CI checks. A prototype that runs on macOS only: `prepare`
   and `init` refuse any other OS.
 - `packages/core/src/engine/protocol/` - the engine protocol: the engine
   contract as LSP-style JSON-RPC (`connectEngine` client, `serveEngine`
@@ -911,8 +913,13 @@ trees, on both platforms, without a device.
   Node 26, `pnpm test` on the newest Node 22, 24, and 26 and on the
   `engines.node` floors (22.22.3, 24.8.0), as two jobs per version
   (`test:runner` for core and e2e, `test:packages` for the rest), the CLI on Bun 1.4.3 and the
-  latest Bun, and `scripts/install-smoke.ts`, a fresh install of the packed
-  packages with pnpm 11 and 12; `benchmark.yml` runs the
+  latest Bun, `scripts/install-smoke.ts`, a fresh install of the packed
+  packages with pnpm 11 and 12, and `native` on `blacksmith-6vcpu-macos-26`
+  (the desktop driver's `cargo fmt --check`, clippy, and `cargo test`, a
+  build for both Mac architectures with each one's architecture checked by
+  `lipo`, and a load of the arm64 build, also
+  through the engine's loader test), which
+  `spec gate` needs; `benchmark.yml` runs the
   web benchmark's two suites; `mobile.yml` runs the mobile benchmark's on an
   iOS simulator and an Android emulator (KVM on x64 Linux); `docs.yml`
   checks the docs. All four run on pull requests and in the merge queue
@@ -1012,6 +1019,11 @@ trees, on both platforms, without a device.
   committed to main as `chore: release`. A `changeset publish` typed by hand
   needs `node scripts/restore-peer-ranges.ts` after it, or `pnpm check` fails
   on the pin.
+  The canary build also builds the desktop driver into both platform
+  packages (`build:desktop-native`), so it runs on a Mac with rustup. In
+  `release.yml`, a macOS `native` job builds the driver, and the release
+  and nightly jobs place it into the platform packages (`place-native.ts`)
+  before they publish.
 - The runner publishes as the unscoped `e2e` (entry points `e2e`, `e2e/agent`,
   `e2e/engine`, `e2e/runner`, `e2e/reporters`, `e2e/oauth/chatgpt`, `e2e/oauth/copilot`, `e2e/oauth/grok`, `e2e/oauth/opencode-console`; the bin is `e2e` too); engines, reporters, and integrations publish public
   under the `@e2e-dev` scope. The `@e2edev` scope (moved to `@e2e-dev` on
